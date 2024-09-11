@@ -20,7 +20,7 @@ class ProfilerCallback(Callback):
         hydra_path = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
         job_name = hydra.core.hydra_config.HydraConfig.get().job.name
         memray_fp = hydra_path / f"{job_name}.memray"
-        self.memray_tracker = Tracker(memray_fp)
+        self.memray_tracker = Tracker(memray_fp, follow_fork=True)
         self.memray_tracker.__enter__()
 
         st = datetime.now()
