@@ -16,6 +16,31 @@ class ProfilerCallback(Callback):
     def __init__(self):
         self.memray_tracker = None
 
+    def on_multirun_start(self, config: DictConfig) -> None:
+        hydra_path = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+        memray_fp = hydra_path / "multirun.memray"
+        self.memray_tracker = Tracker(memray_fp, follow_fork=True)
+        self.memray_tracker.__enter__()
+
+        st = datetime.now()
+        timing_fp = hydra_path / "multirun.timing.json"
+        timings = {"start": st.isoformat()}
+        timing_fp.write_text(json.dumps(timings))
+
+    def on_multirun_end(self, config: DictConfig) -> None:
+        hydra_path = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+        if self.memray_tracker is None:
+            logger.warning("ProfilerCallback.on_multirun_end: self.memray_tracker is None!")
+        else:
+            self.memray_tracker.__exit__(None, None, None)
+
+        end = datetime.now()
+        timing_fp = hydra_path / "multirun.timing.json"
+        timings = json.loads(timing_fp.read_text())
+        timings["end"] = end.isoformat()
+        timings["duration_seconds"] = (end - datetime.fromisoformat(timings["start"])).total_seconds()
+        timing_fp.write_text(json.dumps(timings))
+
     def on_job_start(self, task_function: TaskFunction, config: DictConfig) -> None:
         hydra_path = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
         job_name = hydra.core.hydra_config.HydraConfig.get().job.name
