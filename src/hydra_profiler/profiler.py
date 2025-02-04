@@ -22,6 +22,11 @@ class ProfilerCallback(Callback):
         return {"memray_tracker": None}
 
     def on_multirun_start(self, config: DictConfig, **kwargs: Any) -> None:
+        if config.hydra.launcher._target_.split(".")[-1] == "BasicLauncher":
+            logger.warning(
+                "BasicLauncher detected, only performing job profiling as one tracker can exist per thread!"
+            )
+            return
         hydra_path = Path(config.hydra.run.dir)
         hydra_path.mkdir(parents=True, exist_ok=True)
         memray_fp = hydra_path / "multirun.memray"
@@ -37,6 +42,11 @@ class ProfilerCallback(Callback):
         logger.info(f"multirun: {hydra_path}")
 
     def on_multirun_end(self, config: DictConfig, **kwargs: Any) -> None:
+        if config.hydra.launcher._target_.split(".")[-1] == "BasicLauncher":
+            logger.warning(
+                "BasicLauncher detected, only performing job profiling as one tracker can exist per thread!"
+            )
+            return
         hydra_path = Path(config.hydra.run.dir)
         if self.memray_tracker is None:
             logger.warning("ProfilerCallback.on_multirun_end: self.memray_tracker is None!")
