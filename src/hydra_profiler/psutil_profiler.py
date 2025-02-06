@@ -56,9 +56,10 @@ class MemorySampler:
 
 class ProfilerCallback(Callback):
     def __init__(self, sampling_interval: float = 1.0):
-        self.mem_sampler = MemorySampler(interval=sampling_interval)
+        self.sampling_interval = sampling_interval
 
     def on_job_start(self, task_function: TaskFunction, config: DictConfig) -> None:
+        self.mem_sampler = MemorySampler(interval=self.sampling_interval)
         hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
         hydra_path = Path(hydra_cfg.runtime.output_dir)
         job_name = hydra_cfg.job.name
