@@ -7,7 +7,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
 
 def test_cli_profiler_callback(tmp_path: Path):
     """

@@ -2,8 +2,8 @@ import json
 import time
 from pathlib import Path
 
-import pytest
 from omegaconf import DictConfig
+
 from hydra_profiler.psutil_profiler import ProfilerCallback
 
 # Import the callback from wherever you have defined it.
@@ -15,20 +15,25 @@ from hydra_profiler.psutil_profiler import ProfilerCallback
 
 # --- Dummy Hydra Config Setup ---
 
+
 class DummyRuntime:
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
 
+
 class DummyJob:
     def __init__(self, name: str):
         self.name = name
+
 
 class DummyHydraConfig:
     def __init__(self, output_dir: str, job_name: str):
         self.runtime = DummyRuntime(output_dir)
         self.job = DummyJob(job_name)
 
+
 # --- Integration Test ---
+
 
 def test_profiler_callback(tmp_path: Path, monkeypatch):
     """
@@ -44,10 +49,13 @@ def test_profiler_callback(tmp_path: Path, monkeypatch):
 
     # Override HydraConfig.get() so that our callback uses the dummy configuration.
     from hydra.core.hydra_config import HydraConfig  # type: ignore
+
     monkeypatch.setattr(HydraConfig, "get", lambda: dummy_config)
 
     # Create dummy arguments for the callback methods.
-    dummy_task_function = lambda: None  # The callback doesn't use this in our implementation.
+    def dummy_task_function():  # The callback doesn't use this in our implementation.
+        return None
+
     dummy_config_omegaconf: DictConfig = {}  # Not used in our implementation either.
 
     # Instantiate the callback with a fast (0.1 second) sampling interval for testing.
@@ -89,11 +97,15 @@ def test_profiler_callback(tmp_path: Path, monkeypatch):
     mem_stats = profile["memory_stats"]
     for key in ("average_rss_bytes", "peak_rss_bytes", "samples"):
         assert key in mem_stats, f"Memory stats missing '{key}'."
-    assert isinstance(mem_stats["samples"], list) and len(mem_stats["samples"]) > 0, "No memory samples were collected."
+    assert (
+        isinstance(mem_stats["samples"], list) and len(mem_stats["samples"]) > 0
+    ), "No memory samples were collected."
 
     # Optionally, verify that sample timestamps are in increasing order and RSS values are integers.
     samples = mem_stats["samples"]
     timestamps = [sample["timestamp"] for sample in samples]
-    assert all(timestamps[i] <= timestamps[i + 1] for i in range(len(timestamps) - 1)), "Timestamps are not in order."
+    assert all(
+        timestamps[i] <= timestamps[i + 1] for i in range(len(timestamps) - 1)
+    ), "Timestamps are not in order."
     for sample in samples:
         assert isinstance(sample["rss"], int), "RSS value in sample is not an integer."

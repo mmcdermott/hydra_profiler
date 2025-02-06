@@ -7,10 +7,10 @@ from datetime import datetime
 from pathlib import Path
 
 import hydra
+import psutil
 from hydra.experimental.callback import Callback
 from hydra.types import TaskFunction
 from omegaconf import DictConfig
-import psutil
 
 logger = logging.getLogger(__name__)
 
